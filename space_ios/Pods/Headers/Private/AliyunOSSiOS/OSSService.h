@@ -1,1 +1,0 @@
-link ../../../AliyunOSSiOS/AliyunOSSiOS/OSSService.h

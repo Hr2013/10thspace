@@ -1,1 +1,0 @@
-link ../../../AliyunOSSiOS/AliyunOSSiOS/OSSCompat.h

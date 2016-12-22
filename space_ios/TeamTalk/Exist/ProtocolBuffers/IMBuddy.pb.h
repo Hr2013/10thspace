@@ -2,6 +2,7 @@
 
 #import <ProtocolBuffers/ProtocolBuffers.h>
 
+
 #import "IMBaseDefine.pb.h"
 // @@protoc_insertion_point(imports)
 
