@@ -11,21 +11,18 @@
 #import "ChattingMainViewController.h"
 #import "DDClientStateMaintenanceManager.h"
 #import "SessionModule.h"
-#import "NSDictionary+Safe.h"
-//#import <Fabric/Fabric.h>
-//#import <Crashlytics/Crashlytics.h>
+#import "NSDictionary+Safe.h>"
 #import <ShareSDK/ShareSDK.h>
 #import <ShareSDKConnector/ShareSDKConnector.h>
-
 //腾讯开放平台（对应QQ和QQ空间）SDK头文件
 #import <TencentOpenAPI/TencentOAuth.h>
 #import <TencentOpenAPI/QQApiInterface.h>
-
 //微信SDK头文件
 #import "WXApi.h"
-
 //新浪微博SDK头文件
 #import "WeiboSDK.h"
+//#import <Fabric/Fabric.h>
+//#import <Crashlytics/Crashlytics.h>
 
 @interface AppDelegate ()
 
@@ -40,7 +37,7 @@
     NSUserDefaults *TimeOfBootCount = [NSUserDefaults standardUserDefaults];
     if (![TimeOfBootCount valueForKey:@"time"]) {
         [TimeOfBootCount setValue:@"sd" forKey:@"time"];
-        // 下载后第一次启动
+        // 下载后第一次启动(shouyexiangji)
         [[NSUserDefaults standardUserDefaults] setObject:@"YES" forKey:@"isFirstRunning"];
     }else{
         // 不是第一次启动
