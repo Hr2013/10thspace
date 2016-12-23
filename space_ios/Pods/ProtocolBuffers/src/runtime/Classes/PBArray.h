@@ -43,6 +43,7 @@ typedef enum _PBArrayValueType
 	NSUInteger			_capacity;
 	NSUInteger			_count;
 	void *				_data;
+
 }
 
 - (NSUInteger)count;

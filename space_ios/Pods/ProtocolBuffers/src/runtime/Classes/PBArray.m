@@ -453,7 +453,7 @@ static PBArrayValueTypeInfo PBValueTypes[] =
             setter((NSNumber *)object, _data + offset);
             offset += elementSize;
         }
-        
+
 	}
 
 	return self;

@@ -25,10 +25,8 @@
 
 
 @interface PBCodedInputStream ()
-
 @property (strong) NSMutableData* buffer;
 @property (strong) NSInputStream* input;
-
 @end
 
 
@@ -228,8 +226,8 @@ const SInt32 BUFFER_SIZE = 4096;
     bufferPos += size;
     return result;
   } else {
-      // Slow path:  Build a byte array first then copy it.
-      NSData* data = [self readRawData:size];
+    // Slow path:  Build a byte array first then copy it.
+    NSData* data = [self readRawData:size];
       return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
   }
 }

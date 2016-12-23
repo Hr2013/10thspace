@@ -11,7 +11,7 @@
 #import "ChattingMainViewController.h"
 #import "DDClientStateMaintenanceManager.h"
 #import "SessionModule.h"
-#import "NSDictionary+Safe.h>"
+#import "NSDictionary+Safe.h"
 #import <ShareSDK/ShareSDK.h>
 #import <ShareSDKConnector/ShareSDKConnector.h>
 //腾讯开放平台（对应QQ和QQ空间）SDK头文件

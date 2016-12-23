@@ -56,6 +56,13 @@ NSString * const serverReturnDateFormat = @"EEE, dd MMM yyyy HH:mm:ss z";
 
 static NSTimeInterval _clockSkew = 0.0;
 
++ (void)oss_setStandardTimeIntervalSince1970:(NSTimeInterval)standardTime {
+    NSTimeInterval deviceTime = [[NSDate date] timeIntervalSince1970];
+    @synchronized (self) {
+        _clockSkew = deviceTime - standardTime;
+    }
+}
+
 + (void)oss_setClockSkew:(NSTimeInterval)clockSkew {
     @synchronized(self) {
         _clockSkew = clockSkew;
@@ -212,7 +219,7 @@ static NSTimeInterval _clockSkew = 0.0;
             NSTimeInterval interval = [expirationDate timeIntervalSinceDate:[NSDate oss_clockSkewFixedDate]];
             /* if this token will be expired after less than 2min, we abort it in case of when request arrived oss server,
                it's expired already. */
-            if (interval < 2 * 60) {
+            if (interval < 5 * 60) {
                 OSSLogDebug(@"get federation token, but after %lf second it would be expired", interval);
                 self.cachedToken = self.federationTokenGetter();
             }
@@ -330,7 +337,7 @@ NSString * const BACKGROUND_SESSION_IDENTIFIER = @"com.aliyun.oss.backgroundsess
     if (requestMessage.contentMd5) {
         contentMd5 = requestMessage.contentMd5;
     }
-    
+
     /* if credential provider is a federation token provider, it need to specially handle */
     if ([self.credentialProvider isKindOfClass:[OSSFederationCredentialProvider class]]) {
         federationToken = [(OSSFederationCredentialProvider *)self.credentialProvider getToken:&error];
@@ -342,7 +349,7 @@ NSString * const BACKGROUND_SESSION_IDENTIFIER = @"com.aliyun.oss.backgroundsess
         federationToken = [(OSSStsTokenCredentialProvider *)self.credentialProvider getToken];
         [requestMessage.headerParams setObject:federationToken.tToken forKey:@"x-oss-security-token"];
     }
-    
+
     /* construct CanonicalizedOSSHeaders */
     if (requestMessage.headerParams) {
         NSMutableArray * params = [[NSMutableArray alloc] init];

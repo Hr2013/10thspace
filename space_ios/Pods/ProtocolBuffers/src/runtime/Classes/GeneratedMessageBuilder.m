@@ -23,10 +23,9 @@
 #import "UnknownFieldSet.h"
 #import "UnknownFieldSetBuilder.h"
 
+
 @interface PBGeneratedMessage ()
-
 @property (strong) PBUnknownFieldSet* unknownFields;
-
 @end
 
 
@@ -36,46 +35,41 @@
  * Get the message being built.  We don't just pass this to the
  * constructor because it becomes null when build() is called.
  */
-- (PBGeneratedMessage*) internalGetResult
-{
-    @throw [NSException exceptionWithName:@"ImproperSubclassing" reason:@"" userInfo:nil];
+- (PBGeneratedMessage*) internalGetResult {
+  @throw [NSException exceptionWithName:@"ImproperSubclassing" reason:@"" userInfo:nil];
 }
 
 
-- (void) checkInitialized
-{
-    PBGeneratedMessage* result = self.internalGetResult;
-    if (result != nil && !result.isInitialized) {
-        @throw [NSException exceptionWithName:@"UninitializedMessage" reason:@"" userInfo:nil];
-    }
+- (void) checkInitialized {
+  PBGeneratedMessage* result = self.internalGetResult;
+  if (result != nil && !result.isInitialized) {
+    @throw [NSException exceptionWithName:@"UninitializedMessage" reason:@"" userInfo:nil];
+  }
 }
 
 
-- (PBUnknownFieldSet*) unknownFields
-{
-    return self.internalGetResult.unknownFields;
+- (PBUnknownFieldSet*) unknownFields {
+  return self.internalGetResult.unknownFields;
 }
 
 
-- (id<PBMessageBuilder>) setUnknownFields:(PBUnknownFieldSet*) unknownFields
-{
-    self.internalGetResult.unknownFields = unknownFields;
-    return self;
+- (id<PBMessageBuilder>) setUnknownFields:(PBUnknownFieldSet*) unknownFields {
+  self.internalGetResult.unknownFields = unknownFields;
+  return self;
 }
 
 
-- (id<PBMessageBuilder>) mergeUnknownFields:(PBUnknownFieldSet*) unknownFields
-{
-    PBGeneratedMessage* result = self.internalGetResult;
-    result.unknownFields =
-    [[[PBUnknownFieldSet builderWithUnknownFields:result.unknownFields]
-      mergeUnknownFields:unknownFields] build];
-    return self;
+- (id<PBMessageBuilder>) mergeUnknownFields:(PBUnknownFieldSet*) unknownFields {
+  PBGeneratedMessage* result = self.internalGetResult;
+  result.unknownFields =
+  [[[PBUnknownFieldSet builderWithUnknownFields:result.unknownFields]
+    mergeUnknownFields:unknownFields] build];
+  return self;
 }
 
 
 - (BOOL) isInitialized {
-    return self.internalGetResult.isInitialized;
+  return self.internalGetResult.isInitialized;
 }
 
 
@@ -86,18 +80,16 @@
 - (BOOL) parseUnknownField:(PBCodedInputStream*) input
              unknownFields:(PBUnknownFieldSetBuilder*) unknownFields
          extensionRegistry:(PBExtensionRegistry*) extensionRegistry
-                       tag:(SInt32) tag
-{
-    return [unknownFields mergeFieldFrom:tag input:input];
+                       tag:(SInt32) tag {
+  return [unknownFields mergeFieldFrom:tag input:input];
 }
 
 
-- (void) checkInitializedParsed
-{
-    PBGeneratedMessage* result = self.internalGetResult;
-    if (result != nil && !result.isInitialized) {
-        @throw [NSException exceptionWithName:@"InvalidProtocolBuffer" reason:@"" userInfo:nil];
-    }
+- (void) checkInitializedParsed {
+  PBGeneratedMessage* result = self.internalGetResult;
+  if (result != nil && !result.isInitialized) {
+    @throw [NSException exceptionWithName:@"InvalidProtocolBuffer" reason:@"" userInfo:nil];
+  }
 }
 
 @end

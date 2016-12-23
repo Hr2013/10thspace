@@ -10,6 +10,7 @@
 #import "SCLAlertViewResponder.h"
 #import "SCLAlertViewStyleKit.h"
 #import "UIImage+ImageEffects.h"
+#import "SCLTimerDisplay.h"
 #import "SCLMacros.h"
 
 #if defined(__has_feature) && __has_feature(modules)
@@ -20,6 +21,8 @@
 
 #define KEYBOARD_HEIGHT 80
 #define PREDICTION_BAR_HEIGHT 40
+#define ADD_BUTTON_PADDING 10.0f
+#define DEFAULT_WINDOW_WIDTH 240
 
 @interface SCLAlertView ()  <UITextFieldDelegate, UIGestureRecognizerDelegate>
 
@@ -67,6 +70,7 @@ CGFloat kTitleHeight;
 
 // Timer
 NSTimer *durationTimer;
+SCLTimerDisplay *buttonTimer;
 
 #pragma mark - Initialization
 
@@ -82,116 +86,37 @@ NSTimer *durationTimer;
     self = [super init];
     if (self)
     {
-        // Default values
-        kCircleTopPosition = -12.0f;
-        kCircleBackgroundTopPosition = -15.0f;
-        kCircleHeight = 56.0f;
-        kCircleHeightBackground = 62.0f;
-        kActivityIndicatorHeight = 40.0f;
-        kTitleTop = 24.0f;
-        kTitleHeight = 40.0f;
-        self.subTitleY = 70.0f;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        self.subTitleHeight = 90.0f;
-#pragma clang diagnostic pop
-        self.circleIconHeight = 20.0f;
-        self.windowWidth = 240.0f;
-        self.windowHeight = 178.0f;
-        self.shouldDismissOnTapOutside = NO;
-        self.usingNewWindow = NO;
-        self.canAddObservers = YES;
-        self.keyboardIsVisible = NO;
-        self.hideAnimationType = FadeOut;
-        self.showAnimationType = SlideInFromTop;
-        self.backgroundType = Shadow;
-        
-        // Font
-        _titleFontFamily = @"HelveticaNeue";
-        _bodyTextFontFamily = @"HelveticaNeue";
-        _buttonsFontFamily = @"HelveticaNeue-Bold";
-        _titleFontSize = 20.0f;
-        _bodyFontSize = 14.0f;
-        _buttonsFontSize = 14.0f;
-        
-        // Init
-        _labelTitle = [[UILabel alloc] init];
-        _viewText = [[UITextView alloc] init];
-        _contentView = [[UIView alloc] init];
-        _circleView = [[UIView alloc] init];
-        _circleViewBackground = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, kCircleHeightBackground, kCircleHeightBackground)];
-        _circleIconImageView = [[UIImageView alloc] init];
-        _backgroundView = [[UIImageView alloc]initWithFrame:[self mainScreenFrame]];
-        _buttons = [[NSMutableArray alloc] init];
-        _inputs = [[NSMutableArray alloc] init];
-        
-        // Add Subviews
-        [self.view addSubview:_contentView];
-        [self.view addSubview:_circleViewBackground];
-        
-        // Background View
-        _backgroundView.userInteractionEnabled = YES;
-        
-        // Content View
-        _contentView.backgroundColor = [UIColor whiteColor];
-        _contentView.layer.cornerRadius = 5.0f;
-        _contentView.layer.masksToBounds = YES;
-        _contentView.layer.borderWidth = 0.5f;
-        [_contentView addSubview:_labelTitle];
-        [_contentView addSubview:_viewText];
-        
-        // Circle View
-        _circleViewBackground.backgroundColor = [UIColor whiteColor];
-        _circleViewBackground.layer.cornerRadius = _circleViewBackground.frame.size.height / 2;
-        CGFloat x = (kCircleHeightBackground - kCircleHeight) / 2;
-        _circleView.frame = CGRectMake(x, x, kCircleHeight, kCircleHeight);
-        _circleView.layer.cornerRadius = _circleView.frame.size.height / 2;
-        x = (kCircleHeight - _circleIconHeight) / 2;
-        _circleIconImageView.frame = CGRectMake(x, x, _circleIconHeight, _circleIconHeight);
-        [_circleViewBackground addSubview:_circleView];
-        [_circleView addSubview:_circleIconImageView];
-        
-        // Title
-        _labelTitle.numberOfLines = 1;
-        _labelTitle.textAlignment = NSTextAlignmentCenter;
-        _labelTitle.font = [UIFont fontWithName:_titleFontFamily size:_titleFontSize];
-        _labelTitle.frame = CGRectMake(12.0f, kTitleTop, _windowWidth - 24.0f, kTitleHeight);
-        
-        // View text
-        _viewText.editable = NO;
-        _viewText.allowsEditingTextAttributes = YES;
-        _viewText.textAlignment = NSTextAlignmentCenter;
-        _viewText.font = [UIFont fontWithName:_bodyTextFontFamily size:_bodyFontSize];
-        _viewText.frame = CGRectMake(12.0f, _subTitleY, _windowWidth - 24.0f, _subTitleHeight);
-        
-        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
-        {
-            _viewText.textContainerInset = UIEdgeInsetsZero;
-            _viewText.textContainer.lineFragmentPadding = 0;
-        }
-        
-        // Colors
-        self.backgroundViewColor = [UIColor whiteColor];
-        _labelTitle.textColor = UIColorFromHEX(0x4D4D4D); //Dark Grey
-        _viewText.textColor = UIColorFromHEX(0x4D4D4D); //Dark Grey
-        _contentView.layer.borderColor = UIColorFromHEX(0xCCCCCC).CGColor; //Light Grey
+        [self setupViewWindowWidth:DEFAULT_WINDOW_WIDTH];
+    }
+    return self;
+}
+
+- (instancetype)initWithWindowWidth:(CGFloat)windowWidth
+{
+    self = [super init];
+    if (self)
+    {
+        [self setupViewWindowWidth:windowWidth];
     }
     return self;
 }
 
 - (instancetype)initWithNewWindow
 {
-    self = [self init];
+    self = [self initWithWindowWidth:DEFAULT_WINDOW_WIDTH];
     if(self)
     {
-        // Create a new one to show the alert
-        UIWindow *alertWindow = [[UIWindow alloc] initWithFrame:[self mainScreenFrame]];
-        alertWindow.windowLevel = UIWindowLevelAlert;
-        alertWindow.backgroundColor = [UIColor clearColor];
-        alertWindow.rootViewController = self;
-        self.SCLAlertWindow = alertWindow;
-        
-        self.usingNewWindow = YES;
+        [self setupNewWindow];
+    }
+    return self;
+}
+
+- (instancetype)initWithNewWindowWidth:(CGFloat)windowWidth
+{
+    self = [self initWithWindowWidth:windowWidth];
+    if(self)
+    {
+        [self setupNewWindow];
     }
     return self;
 }
@@ -218,6 +143,114 @@ NSTimer *durationTimer;
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
 }
 
+#pragma mark - Setup view
+
+- (void)setupViewWindowWidth:(CGFloat)windowWidth
+{
+    // Default values
+    kCircleTopPosition = -12.0f;
+    kCircleBackgroundTopPosition = -15.0f;
+    kCircleHeight = 56.0f;
+    kCircleHeightBackground = 62.0f;
+    kActivityIndicatorHeight = 40.0f;
+    kTitleTop = 24.0f;
+    kTitleHeight = 40.0f;
+    self.subTitleY = 70.0f;
+    self.subTitleHeight = 90.0f;
+    self.circleIconHeight = 20.0f;
+    self.windowWidth = windowWidth;
+    self.windowHeight = 178.0f;
+    self.shouldDismissOnTapOutside = NO;
+    self.usingNewWindow = NO;
+    self.canAddObservers = YES;
+    self.keyboardIsVisible = NO;
+    self.hideAnimationType = FadeOut;
+    self.showAnimationType = SlideInFromTop;
+    self.backgroundType = Shadow;
+    
+    // Font
+    _titleFontFamily = @"HelveticaNeue";
+    _bodyTextFontFamily = @"HelveticaNeue";
+    _buttonsFontFamily = @"HelveticaNeue-Bold";
+    _titleFontSize = 20.0f;
+    _bodyFontSize = 14.0f;
+    _buttonsFontSize = 14.0f;
+    
+    // Init
+    _labelTitle = [[UILabel alloc] init];
+    _viewText = [[UITextView alloc] init];
+    _contentView = [[UIView alloc] init];
+    _circleView = [[UIView alloc] init];
+    _circleViewBackground = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, kCircleHeightBackground, kCircleHeightBackground)];
+    _circleIconImageView = [[UIImageView alloc] init];
+    _backgroundView = [[UIImageView alloc]initWithFrame:[self mainScreenFrame]];
+    _buttons = [[NSMutableArray alloc] init];
+    _inputs = [[NSMutableArray alloc] init];
+    
+    // Add Subviews
+    [self.view addSubview:_contentView];
+    [self.view addSubview:_circleViewBackground];
+    
+    // Background View
+    _backgroundView.userInteractionEnabled = YES;
+    
+    // Content View
+    _contentView.backgroundColor = [UIColor whiteColor];
+    _contentView.layer.cornerRadius = 5.0f;
+    _contentView.layer.masksToBounds = YES;
+    _contentView.layer.borderWidth = 0.5f;
+    [_contentView addSubview:_labelTitle];
+    [_contentView addSubview:_viewText];
+    
+    // Circle View
+    _circleViewBackground.backgroundColor = [UIColor whiteColor];
+    _circleViewBackground.layer.cornerRadius = _circleViewBackground.frame.size.height / 2;
+    CGFloat x = (kCircleHeightBackground - kCircleHeight) / 2;
+    _circleView.frame = CGRectMake(x, x, kCircleHeight, kCircleHeight);
+    _circleView.layer.cornerRadius = _circleView.frame.size.height / 2;
+    x = (kCircleHeight - _circleIconHeight) / 2;
+    _circleIconImageView.frame = CGRectMake(x, x, _circleIconHeight, _circleIconHeight);
+    [_circleViewBackground addSubview:_circleView];
+    [_circleView addSubview:_circleIconImageView];
+    
+    // Title
+    _labelTitle.numberOfLines = 1;
+    _labelTitle.textAlignment = NSTextAlignmentCenter;
+    _labelTitle.font = [UIFont fontWithName:_titleFontFamily size:_titleFontSize];
+    _labelTitle.frame = CGRectMake(12.0f, kTitleTop, _windowWidth - 24.0f, kTitleHeight);
+    
+    // View text
+    _viewText.editable = NO;
+    _viewText.allowsEditingTextAttributes = YES;
+    _viewText.textAlignment = NSTextAlignmentCenter;
+    _viewText.font = [UIFont fontWithName:_bodyTextFontFamily size:_bodyFontSize];
+    _viewText.frame = CGRectMake(12.0f, _subTitleY, _windowWidth - 24.0f, _subTitleHeight);
+    
+    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"7.0"))
+    {
+        _viewText.textContainerInset = UIEdgeInsetsZero;
+        _viewText.textContainer.lineFragmentPadding = 0;
+    }
+    
+    // Colors
+    self.backgroundViewColor = [UIColor whiteColor];
+    _labelTitle.textColor = UIColorFromHEX(0x4D4D4D); //Dark Grey
+    _viewText.textColor = UIColorFromHEX(0x4D4D4D); //Dark Grey
+    _contentView.layer.borderColor = UIColorFromHEX(0xCCCCCC).CGColor; //Light Grey
+}
+
+- (void)setupNewWindow
+{
+    // Create a new one to show the alert
+    UIWindow *alertWindow = [[UIWindow alloc] initWithFrame:[self mainScreenFrame]];
+    alertWindow.windowLevel = UIWindowLevelAlert;
+    alertWindow.backgroundColor = [UIColor clearColor];
+    alertWindow.rootViewController = self;
+    self.SCLAlertWindow = alertWindow;
+    
+    self.usingNewWindow = YES;
+}
+
 #pragma mark - Modal Validation
 
 - (BOOL)isModal
@@ -242,7 +275,7 @@ NSTimer *durationTimer;
     if (SYSTEM_VERSION_LESS_THAN(@"8.0"))
     {
         // iOS versions before 7.0 did not switch the width and height on device roration
-        if (UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]))
+        if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation))
         {
             CGSize ssz = sz;
             sz = CGSizeMake(ssz.height, ssz.width);
@@ -291,11 +324,11 @@ NSTimer *durationTimer;
         // Text fields
         CGFloat y = (_labelTitle.text == nil) ? (kCircleHeight - 20.0f) : 74.0f;
         y += _subTitleHeight + 14.0f;
-        for (UITextField *textField in _inputs)
+        for (SCLTextView *textField in _inputs)
         {
-            textField.frame = CGRectMake(12.0f, y, _windowWidth - 24.0f, 30.0f);
+            textField.frame = CGRectMake(12.0f, y, _windowWidth - 24.0f, textField.frame.size.height);
             textField.layer.cornerRadius = 3.0f;
-            y += 40.0f;
+            y += textField.frame.size.height + 10.0f;
         }
         
         // Buttons
@@ -308,6 +341,18 @@ NSTimer *durationTimer;
     }
 }
 
+#pragma mark - UIViewController
+
+- (BOOL)prefersStatusBarHidden
+{
+  return self.statusBarHidden;
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+  return self.statusBarStyle;
+}
+
 #pragma mark - Handle gesture
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture
@@ -316,10 +361,10 @@ NSTimer *durationTimer;
     {
         BOOL hide = _shouldDismissOnTapOutside;
         
-        for(UITextField *txt in _inputs)
+        for(SCLTextView *txt in _inputs)
         {
             // Check if there is any keyboard on screen and dismiss
-            if ([txt isEditing])
+            if (txt.editing)
             {
                 [txt resignFirstResponder];
                 hide = NO;
@@ -336,7 +381,7 @@ NSTimer *durationTimer;
     if(_shouldDismissOnTapOutside)
     {
         self.gestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-        [_backgroundView addGestureRecognizer:_gestureRecognizer];
+        [_usingNewWindow ? _SCLAlertWindow : _backgroundView addGestureRecognizer:_gestureRecognizer];
     }
 }
 
@@ -444,23 +489,17 @@ NSTimer *durationTimer;
 
 #pragma mark - TextField
 
-- (UITextField *)addTextField:(NSString *)title
+- (SCLTextView *)addTextField:(NSString *)title
 {
     [self addObservers];
     
-    // Update view height
-    self.windowHeight += 40.0f;
-    
     // Add text field
-    UITextField *txt = [[UITextField alloc] init];
-    txt.delegate = self;
-    txt.returnKeyType = UIReturnKeyDone;
-    txt.borderStyle = UITextBorderStyleRoundedRect;
+    SCLTextView *txt = [[SCLTextView alloc] init];
     txt.font = [UIFont fontWithName:_bodyTextFontFamily size:_bodyFontSize];
-    txt.autocapitalizationType = UITextAutocapitalizationTypeWords;
-    txt.clearButtonMode = UITextFieldViewModeWhileEditing;
-    txt.layer.masksToBounds = YES;
-    txt.layer.borderWidth = 1.0f;
+    txt.delegate = self;
+    
+    // Update view height
+    self.windowHeight += txt.bounds.size.height + 10.0f;
     
     if (title != nil)
     {
@@ -475,7 +514,7 @@ NSTimer *durationTimer;
     if (_inputs.count > 1)
     {
         NSUInteger indexOfCurrentField = [_inputs indexOfObject:txt];
-        UITextField *priorField = _inputs[indexOfCurrentField - 1];
+        SCLTextView *priorField = _inputs[indexOfCurrentField - 1];
         priorField.returnKeyType = UIReturnKeyNext;
     }
     return txt;
@@ -484,7 +523,7 @@ NSTimer *durationTimer;
 - (void)addCustomTextField:(UITextField *)textField
 {
     // Update view height
-    self.windowHeight += 40.0f;
+    self.windowHeight += textField.bounds.size.height + 10.0f;
     
     [_contentView addSubview:textField];
     [_inputs addObject:textField];
@@ -505,7 +544,7 @@ NSTimer *durationTimer;
 {
     // If this is the last object in the inputs array, resign first responder
     // as the form is at the end.
-    if (textField == [_inputs lastObject])
+    if (textField == _inputs.lastObject)
     {
         [textField resignFirstResponder];
     }
@@ -530,7 +569,7 @@ NSTimer *durationTimer;
     _keyboardIsVisible = YES;
 }
 
--(void)keyboardWillHide:(NSNotification *)notification
+- (void)keyboardWillHide:(NSNotification *)notification
 {
     if(!_keyboardIsVisible) return;
     
@@ -546,14 +585,14 @@ NSTimer *durationTimer;
 
 - (SCLButton *)addButton:(NSString *)title
 {
-    // Update view height
-    self.windowHeight += 45.0f;
-    
     // Add button
-    SCLButton *btn = [[SCLButton alloc] init];
+    SCLButton *btn = [[SCLButton alloc] initWithWindowWidth:self.windowWidth];
     btn.layer.masksToBounds = YES;
     [btn setTitle:title forState:UIControlStateNormal];
     btn.titleLabel.font = [UIFont fontWithName:_buttonsFontFamily size:_buttonsFontSize];
+    
+    // Update view height
+    self.windowHeight += (btn.frame.size.height + ADD_BUTTON_PADDING);
     
     [_contentView addSubview:btn];
     [_buttons addObject:btn];
@@ -584,7 +623,7 @@ NSTimer *durationTimer;
         btn.buttonFormatBlock = _buttonFormatBlock;
     }
     
-    btn.actionType = Block;
+    btn.actionType = SCLBlock;
     btn.actionBlock = action;
     [btn addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
@@ -602,7 +641,7 @@ NSTimer *durationTimer;
 - (SCLButton *)addButton:(NSString *)title target:(id)target selector:(SEL)selector
 {
     SCLButton *btn = [self addButton:title];
-    btn.actionType = Selector;
+    btn.actionType = SCLSelector;
     btn.target = target;
     btn.selector = selector;
     [btn addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
@@ -612,17 +651,25 @@ NSTimer *durationTimer;
 
 - (void)buttonTapped:(SCLButton *)btn
 {
+    // Cancel Countdown timer
+    [buttonTimer cancelTimer];
+    
     // If the button has a validation block, and the validation block returns NO, validation
     // failed, so we should bail.
     if (btn.validationBlock && !btn.validationBlock()) {
         return;
     }
-    if (btn.actionType == Block)
+    if([self isVisible])
+    {
+        [self hideView];
+    }
+
+    if (btn.actionType == SCLBlock)
     {
         if (btn.actionBlock)
             btn.actionBlock();
     }
-    else if (btn.actionType == Selector)
+    else if (btn.actionType == SCLSelector)
     {
         UIControl *ctrl = [[UIControl alloc] init];
         [ctrl sendAction:btn.selector to:btn.target forEvent:nil];
@@ -631,20 +678,28 @@ NSTimer *durationTimer;
     {
         NSLog(@"Unknown action type for button");
     }
-    if([self isVisible])
-    {
-        [self hideView];
-    }
+}
+
+#pragma mark - Button Timer
+
+- (void)addTimerToButtonIndex:(NSInteger)buttonIndex reverse:(BOOL)reverse
+{
+    buttonIndex = MAX(buttonIndex, 0);
+    buttonIndex = MIN(buttonIndex, [_buttons count]);
+    
+    buttonTimer = [[SCLTimerDisplay alloc] initWithOrigin:CGPointMake(5, 5) radius:13 lineWidth:4];
+    buttonTimer.buttonIndex = buttonIndex;
+    buttonTimer.reverse = reverse;
 }
 
 #pragma mark - Show Alert
 
--(SCLAlertViewResponder *)showTitle:(UIViewController *)vc image:(UIImage *)image color:(UIColor *)color title:(NSString *)title subTitle:(NSString *)subTitle duration:(NSTimeInterval)duration completeText:(NSString *)completeText style:(SCLAlertViewStyle)style
+- (SCLAlertViewResponder *)showTitle:(UIViewController *)vc image:(UIImage *)image color:(UIColor *)color title:(NSString *)title subTitle:(NSString *)subTitle duration:(NSTimeInterval)duration completeText:(NSString *)completeText style:(SCLAlertViewStyle)style
 {
     if(_usingNewWindow)
     {
         // Save previous window
-        self.previousWindow = [[UIApplication sharedApplication] keyWindow];
+        self.previousWindow = [UIApplication sharedApplication].keyWindow;
         self.backgroundView.frame = _SCLAlertWindow.bounds;
         
         // Add window subview
@@ -758,7 +813,7 @@ NSTimer *durationTimer;
             CGRect r = CGRectNull;
             if(_attributedFormatBlock == nil) {
                 NSString *str = subTitle;
-                r = [str boundingRectWithSize:sz options:NSStringDrawingUsesLineFragmentOrigin attributes:attr context:nil];
+                r = [str boundingRectWithSize:sz options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:attr context:nil];
             } else {
                 r = [_viewText.attributedText boundingRectWithSize:sz options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading context:nil];
             }
@@ -767,18 +822,12 @@ NSTimer *durationTimer;
             if (ht < _subTitleHeight)
             {
                 self.windowHeight -= (_subTitleHeight - ht);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                 self.subTitleHeight = ht;
-#pragma clang diagnostic pop
             }
             else
             {
                 self.windowHeight += (ht - _subTitleHeight);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                 self.subTitleHeight = ht;
-#pragma clang diagnostic pop
             }
         }
         else
@@ -789,18 +838,12 @@ NSTimer *durationTimer;
             if (ht < _subTitleHeight)
             {
                 self.windowHeight -= (_subTitleHeight - ht);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                 self.subTitleHeight = ht;
-#pragma clang diagnostic pop
             }
             else
             {
                 self.windowHeight += (ht - _subTitleHeight);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
                 self.subTitleHeight = ht;
-#pragma clang diagnostic pop
             }
         }
         _viewText.frame = CGRectMake(12.0f, _subTitleY, _windowWidth - 24.0f, _subTitleHeight);
@@ -808,10 +851,7 @@ NSTimer *durationTimer;
     else
     {
         // Subtitle is nil, we can move the title to center and remove it from superView
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         self.subTitleHeight = 0.0f;
-#pragma clang diagnostic pop
         self.windowHeight -= _viewText.frame.size.height;
         [_viewText removeFromSuperview];
         
@@ -854,7 +894,7 @@ NSTimer *durationTimer;
         self.circleIconImageView.image = iconImage;
     }
     
-    for (UITextField *textField in _inputs)
+    for (SCLTextView *textField in _inputs)
     {
         textField.layer.borderColor = viewColor.CGColor;
     }
@@ -884,11 +924,23 @@ NSTimer *durationTimer;
     if (duration > 0)
     {
         [durationTimer invalidate];
-        durationTimer = [NSTimer scheduledTimerWithTimeInterval:duration
-                                                         target:self
-                                                       selector:@selector(hideView)
-                                                       userInfo:nil
-                                                        repeats:NO];
+        
+        if (buttonTimer && _buttons.count > 0) {
+            
+            SCLButton *btn = _buttons[buttonTimer.buttonIndex];
+            btn.timer = buttonTimer;
+            [buttonTimer startTimerWithTimeLimit:duration completed:^{
+                [self buttonTapped:btn];
+            }];
+        }
+        else
+        {
+            durationTimer = [NSTimer scheduledTimerWithTimeInterval:duration
+                                                             target:self
+                                                           selector:@selector(hideView)
+                                                           userInfo:nil
+                                                            repeats:NO];
+        }
     }
     
     if(_usingNewWindow)
@@ -1024,7 +1076,7 @@ NSTimer *durationTimer;
 
 - (BOOL)isAppExtension
 {
-    return [[[NSBundle mainBundle] executablePath] rangeOfString:@".appex/"].location != NSNotFound;
+    return [[NSBundle mainBundle].executablePath rangeOfString:@".appex/"].location != NSNotFound;
 }
 
 #pragma mark - Background Effects
@@ -1039,7 +1091,7 @@ NSTimer *durationTimer;
 
 - (void)makeBlurBackground
 {
-    UIView *appView = (_usingNewWindow) ? [[[[UIApplication sharedApplication] keyWindow] subviews] lastObject] : _rootViewController.view;
+    UIView *appView = (_usingNewWindow) ? [UIApplication sharedApplication].keyWindow.subviews.lastObject : _rootViewController.view;
     UIImage *image = [UIImage convertViewToImage:appView];
     UIImage *blurSnapshotImage = [image applyBlurWithRadius:5.0f
                                                   tintColor:[UIColor colorWithWhite:0.2f
@@ -1178,6 +1230,8 @@ NSTimer *durationTimer;
         [self.backgroundView removeFromSuperview];
         if(_usingNewWindow)
         {
+            // Remove current window            
+            [self.SCLAlertWindow setHidden:YES];
             self.SCLAlertWindow = nil;
         }
         else

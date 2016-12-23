@@ -12,6 +12,8 @@
 #import <UIKit/UIKit.h>
 #endif
 
+@class SCLTimerDisplay;
+
 @interface SCLButton : UIButton
 
 typedef void (^SCLActionBlock)(void);
@@ -22,9 +24,9 @@ typedef NSDictionary* (^ButtonFormatBlock)(void);
 // Action Types
 typedef NS_ENUM(NSInteger, SCLActionType)
 {
-    None,
-    Selector,
-    Block
+    SCLNone,
+    SCLSelector,
+    SCLBlock
 };
 
 /** Set button action type.
@@ -84,5 +86,16 @@ typedef NS_ENUM(NSInteger, SCLActionType)
  * Set keys : backgroundColor, borderWidth, borderColor, textColor
  */
 - (void)parseConfig:(NSDictionary *)buttonConfig;
+
+/** Set button timer.
+ *
+ * Holds the button timer, if present.
+ */
+@property (nonatomic) SCLTimerDisplay *timer;
+
+/** Init method
+ *
+ */
+- (instancetype)initWithWindowWidth:(CGFloat)windowWidth;
 
 @end
